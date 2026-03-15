@@ -1,0 +1,63 @@
+# ============================================================
+# AI Trend Newsletter — .gitignore
+# ============================================================
+
+# --- 환경 변수 / 시크릿 (절대 커밋 금지) ---
+.env
+*.env.local
+*.env.production
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.log
+
+# --- 가상환경 ---
+.venv/
+venv/
+env/
+
+# --- Celery ---
+celerybeat-schedule
+celerybeat-schedule.db
+celerybeat.pid
+
+# --- Alembic ---
+# alembic/versions/ 는 커밋 대상 (마이그레이션 파일 포함)
+
+# --- Node.js / Next.js ---
+node_modules/
+.next/
+out/
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Docker ---
+# docker-compose.override.yml 은 로컬 오버라이드용으로 제외
+docker-compose.override.yml
+
+# --- IDE / 에디터 ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Claude Code 내부 데이터 ---
+.claude/

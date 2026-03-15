@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -40,6 +38,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-aitracker}:${POSTGRES_PASSWORD:-aitracker_secret}@postgres:5432/${POSTGRES_DB:-aitracker}
+      - DATABASE_SYNC_URL=postgresql://${POSTGRES_USER:-aitracker}:${POSTGRES_PASSWORD:-aitracker_secret}@postgres:5432/${POSTGRES_DB:-aitracker}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
@@ -61,6 +60,7 @@ services:
     container_name: aitracker_worker
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-aitracker}:${POSTGRES_PASSWORD:-aitracker_secret}@postgres:5432/${POSTGRES_DB:-aitracker}
+      - DATABASE_SYNC_URL=postgresql://${POSTGRES_USER:-aitracker}:${POSTGRES_PASSWORD:-aitracker_secret}@postgres:5432/${POSTGRES_DB:-aitracker}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2
@@ -82,6 +82,7 @@ services:
     container_name: aitracker_beat
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-aitracker}:${POSTGRES_PASSWORD:-aitracker_secret}@postgres:5432/${POSTGRES_DB:-aitracker}
+      - DATABASE_SYNC_URL=postgresql://${POSTGRES_USER:-aitracker}:${POSTGRES_PASSWORD:-aitracker_secret}@postgres:5432/${POSTGRES_DB:-aitracker}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/1
       - CELERY_RESULT_BACKEND=redis://redis:6379/2

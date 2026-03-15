@@ -108,7 +108,7 @@ DEFAULT_SOURCES = [
     # --- Open Source ---
     {
         "name": "LangChain Blog",
-        "source_type": SourceType.opensource_framework,
+        "source_type": SourceType.opensource,
         "base_url": "https://blog.langchain.dev",
         "feed_url": "https://blog.langchain.dev/rss/",
         "poll_strategy": PollStrategy.rss,

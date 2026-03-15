@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-newsletter-backend"
@@ -33,7 +33,6 @@ dependencies = [
     "playwright==1.49.0",
 
     # AI / LLM
-    "anthropic==0.40.0",
     "openai==1.57.2",
     "tiktoken==0.8.0",
 
@@ -43,6 +42,7 @@ dependencies = [
 
     # Data processing
     "pydantic==2.10.3",
+    "pydantic[email]==2.10.3",
     "pydantic-settings==2.7.0",
     "python-dateutil==2.9.0",
     "pytz==2024.2",

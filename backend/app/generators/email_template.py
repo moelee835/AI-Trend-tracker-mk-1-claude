@@ -53,7 +53,7 @@ _EMAIL_HTML = """<!DOCTYPE html>
     {% for section in sections %}
     <div class="section">
       <h2 class="section-title">{{ section.title }}</h2>
-      {% for item in section.items %}
+      {% for item in section['items'] %}
       <div class="item">
         <div class="headline">{{ item.headline }}</div>
         <span class="importance-badge importance-{{ item.importance | default('medium') }}">

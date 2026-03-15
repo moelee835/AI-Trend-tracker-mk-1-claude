@@ -1,11 +1,11 @@
-"""LLM-based report generation using Anthropic Claude."""
+"""LLM-based report generation using OpenAI GPT."""
 from __future__ import annotations
 
 import json
 import logging
 from datetime import date
 
-import anthropic
+from openai import AsyncOpenAI
 
 from app.config import get_settings
 
@@ -65,15 +65,28 @@ REPORT_USER_TEMPLATE = """오늘({date}) 수집된 AI 관련 기사들입니다.
 반드시 유효한 JSON만 응답하세요."""
 
 
+def _make_client() -> AsyncOpenAI:
+    return AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+
+def _strip_fences(raw: str) -> str:
+    """Remove markdown code fences if GPT wraps JSON in them."""
+    raw = raw.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    return raw.strip()
+
+
 async def generate_report(report_date: date, articles: list[dict]) -> dict:
-    """Call Claude API and return structured report dict."""
-    if not settings.ANTHROPIC_API_KEY:
-        logger.warning("ANTHROPIC_API_KEY not set — returning placeholder report")
+    """Call OpenAI API and return structured report dict."""
+    if not settings.OPENAI_API_KEY:
+        logger.warning("OPENAI_API_KEY not set — returning placeholder report")
         return _placeholder_report(report_date)
 
-    client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    client = _make_client()
 
-    # Prepare article summaries for the prompt (truncate long text)
     article_summaries = []
     for a in articles[:30]:  # cap at 30 articles
         article_summaries.append({
@@ -90,39 +103,37 @@ async def generate_report(report_date: date, articles: list[dict]) -> dict:
         articles_json=articles_json,
     )
 
-    logger.info("Generating report via Claude for date=%s with %d articles", report_date, len(articles))
+    logger.info("Generating report via GPT for date=%s with %d articles", report_date, len(articles))
 
     try:
-        response = await client.messages.create(
+        response = await client.chat.completions.create(
             model=settings.LLM_MODEL,
             max_tokens=settings.LLM_MAX_TOKENS,
-            system=REPORT_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_message}],
+            response_format={"type": "json_object"},  # GPT-4o supports native JSON mode
+            messages=[
+                {"role": "system", "content": REPORT_SYSTEM_PROMPT},
+                {"role": "user", "content": user_message},
+            ],
         )
-        raw = response.content[0].text
-        # Strip markdown code fences if present
-        if raw.strip().startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-        result = json.loads(raw.strip())
-        result["_tokens"] = response.usage.input_tokens + response.usage.output_tokens
+        raw = response.choices[0].message.content or ""
+        result = json.loads(_strip_fences(raw))
+        result["_tokens"] = response.usage.total_tokens if response.usage else 0
         result["_model"] = settings.LLM_MODEL
         return result
     except json.JSONDecodeError as exc:
-        logger.error("Failed to parse LLM JSON response: %s", exc)
+        logger.error("Failed to parse GPT JSON response: %s", exc)
         raise
     except Exception as exc:
-        logger.error("Claude API error: %s", exc)
+        logger.error("OpenAI API error: %s", exc)
         raise
 
 
 async def generate_trend_analysis(reports: list[dict], period_label: str) -> dict:
     """Analyze keyword/category trends across multiple reports."""
-    if not settings.ANTHROPIC_API_KEY:
+    if not settings.OPENAI_API_KEY:
         return {"summary": "API key not configured", "keywords": [], "trends": []}
 
-    client = anthropic.AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
+    client = _make_client()
 
     summaries = [
         {
@@ -148,17 +159,17 @@ async def generate_trend_analysis(reports: list[dict], period_label: str) -> dic
   "vendor_mentions": {{"OpenAI": 5, "Anthropic": 3, ...}}
 }}"""
 
-    response = await client.messages.create(
+    response = await client.chat.completions.create(
         model=settings.LLM_MODEL,
         max_tokens=2048,
-        messages=[{"role": "user", "content": prompt}],
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": "반드시 유효한 JSON만 응답하세요."},
+            {"role": "user", "content": prompt},
+        ],
     )
-    raw = response.content[0].text
-    if raw.strip().startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    return json.loads(raw.strip())
+    raw = response.choices[0].message.content or ""
+    return json.loads(_strip_fences(raw))
 
 
 def _placeholder_report(report_date: date) -> dict:
@@ -172,8 +183,8 @@ def _placeholder_report(report_date: date) -> dict:
                 "items": [
                     {
                         "headline": "LLM API 키 미설정 - 실제 리포트가 아닙니다",
-                        "why_important": "ANTHROPIC_API_KEY 환경변수를 설정해주세요",
-                        "developer_point": ".env 파일에 ANTHROPIC_API_KEY=sk-ant-... 추가 필요",
+                        "why_important": "OPENAI_API_KEY 환경변수를 설정해주세요",
+                        "developer_point": ".env 파일에 OPENAI_API_KEY=sk-... 추가 필요",
                         "keywords": ["setup", "configuration"],
                         "source_url": "#",
                         "source_title": "시스템 메시지",

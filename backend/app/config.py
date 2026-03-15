@@ -24,9 +24,8 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 
     # LLM
-    ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
-    LLM_MODEL: str = "claude-sonnet-4-6"
+    LLM_MODEL: str = "gpt-4o"
     LLM_MAX_TOKENS: int = 4096
 
     # News API

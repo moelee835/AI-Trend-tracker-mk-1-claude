@@ -10,8 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
+# stub app/ package so editable install resolves before source copy (layer cache)
 COPY pyproject.toml .
 RUN pip install --no-cache-dir --upgrade pip && \
+    mkdir -p app && touch app/__init__.py && \
     pip install --no-cache-dir -e .
 
 COPY . .
