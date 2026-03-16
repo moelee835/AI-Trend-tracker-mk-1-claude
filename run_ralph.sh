@@ -10,7 +10,7 @@ while [ $run -lt $MAX_RUNS ]; do
   echo "=== Session $run ==="
 
   # prompt.md를 파이프로 넘겨 non-interactive 모드 실행
-  cat "$PROMPT_FILE" | claude -p
+  cat "$PROMPT_FILE" | claude -p --dangerously-skip-permissions
 
   # 종료 조건 5개 직접 검사
   all_pass=$(python3 -c "

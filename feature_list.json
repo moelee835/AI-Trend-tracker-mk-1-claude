@@ -1,0 +1,294 @@
+[
+  {
+    "id": "F001",
+    "category": "infrastructure",
+    "priority": 1,
+    "description": "All Docker services start healthy and the backend returns a valid health check response",
+    "steps": [
+      "Run: docker compose up -d",
+      "Wait ~30s, then run: docker compose ps",
+      "Verify all 6 containers show status 'Up' or 'healthy'",
+      "Run: curl http://localhost:8000/health",
+      "Verify response contains {\"status\":\"ok\"}"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F002",
+    "category": "infrastructure",
+    "priority": 2,
+    "description": "Database migrations run successfully and all 11 tables exist with correct schema",
+    "steps": [
+      "Run: docker compose exec backend alembic upgrade head",
+      "Run: docker compose exec postgres psql -U aitracker -d aitracker -c '\\dt'",
+      "Verify all 11 tables exist: sources, articles, article_contents, article_fingerprints, article_scores, recipients, daily_reports, report_versions, report_sections, email_deliveries, job_execution_logs"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F003",
+    "category": "infrastructure",
+    "priority": 3,
+    "description": "Default news sources are seeded into the database (12 sources)",
+    "steps": [
+      "Run: docker compose exec backend python scripts/seed_sources.py",
+      "Run: curl http://localhost:8000/api/v1/sources/",
+      "Verify response contains at least 12 sources"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F004",
+    "category": "functional",
+    "priority": 4,
+    "description": "Admin can view the dashboard summary with today's article counts and report status",
+    "steps": [
+      "Run: curl http://localhost:8000/api/v1/dashboard/summary",
+      "Verify response includes fields: articles_today, total_articles, pending_reports, active_recipients, last_collection_at",
+      "Verify HTTP 200 response"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F005",
+    "category": "functional",
+    "priority": 5,
+    "description": "Admin can list and add news sources (RSS feeds and NewsAPI)",
+    "steps": [
+      "Run: curl http://localhost:8000/api/v1/sources/",
+      "Verify HTTP 200 and list of sources returned",
+      "Run: curl -X POST http://localhost:8000/api/v1/sources/ -H 'Content-Type: application/json' -d '{\"name\":\"Test RSS\",\"source_type\":\"rss\",\"feed_url\":\"https://example.com/feed.xml\",\"enabled\":true}'",
+      "Verify HTTP 201 and the new source is returned with an ID",
+      "Run: curl http://localhost:8000/api/v1/sources/ and verify the new source appears"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F006",
+    "category": "functional",
+    "priority": 6,
+    "description": "Admin can manually trigger article collection and see articles stored in the database",
+    "steps": [
+      "Ensure at least one enabled source exists",
+      "Run: curl -X POST http://localhost:8000/api/v1/jobs/run/collect",
+      "Verify HTTP 200 and job_id returned",
+      "Wait 10s, then run: curl http://localhost:8000/api/v1/jobs/logs?limit=5",
+      "Verify job log shows status=success for collect job",
+      "Run: curl http://localhost:8000/api/v1/articles/ and verify articles exist"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F007",
+    "category": "functional",
+    "priority": 7,
+    "description": "Article deduplication via SimHash correctly identifies and marks duplicate articles",
+    "steps": [
+      "Trigger collection: curl -X POST http://localhost:8000/api/v1/jobs/run/collect",
+      "Trigger collection again: curl -X POST http://localhost:8000/api/v1/jobs/run/collect",
+      "Run: curl 'http://localhost:8000/api/v1/articles/?is_duplicate=true'",
+      "Verify duplicate articles are marked with is_duplicate=true",
+      "Run unit tests: docker compose exec backend pytest tests/test_analyzers.py -v"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F008",
+    "category": "functional",
+    "priority": 8,
+    "description": "Admin can manage newsletter subscribers (add, list, import CSV)",
+    "steps": [
+      "Run: curl -X POST http://localhost:8000/api/v1/recipients/ -H 'Content-Type: application/json' -d '{\"email\":\"test@example.com\",\"name\":\"Test User\"}'",
+      "Verify HTTP 201 returned",
+      "Run: curl http://localhost:8000/api/v1/recipients/ and verify the new subscriber appears",
+      "Create a CSV file with headers email,name and 2 rows, then POST to /api/v1/recipients/import/csv",
+      "Verify all subscribers were imported"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F009",
+    "category": "functional",
+    "priority": 9,
+    "description": "Admin can manually trigger GPT-4o newsletter generation and view the generated report",
+    "steps": [
+      "Ensure at least 5 articles exist in the database",
+      "Run: curl -X POST http://localhost:8000/api/v1/jobs/run/report",
+      "Verify HTTP 200 and job_id returned",
+      "Wait for completion, then run: curl http://localhost:8000/api/v1/reports/",
+      "Verify a report exists with status=draft or ready",
+      "Run: curl http://localhost:8000/api/v1/reports/<id> and verify html_content is populated"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F010",
+    "category": "functional",
+    "priority": 10,
+    "description": "Admin can approve a report before sending",
+    "steps": [
+      "Ensure a report exists with status=ready",
+      "Run: curl -X POST http://localhost:8000/api/v1/reports/<id>/approve",
+      "Verify HTTP 200 returned",
+      "Run: curl http://localhost:8000/api/v1/reports/<id>",
+      "Verify report status changed to approved"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F011",
+    "category": "functional",
+    "priority": 11,
+    "description": "Admin can send a test email to a single address to preview the newsletter",
+    "steps": [
+      "Ensure a report exists and SMTP credentials are configured in .env",
+      "Run: curl -X POST http://localhost:8000/api/v1/deliveries/test-send -H 'Content-Type: application/json' -d '{\"report_id\": 1, \"test_email\": \"<your-email>\"}'",
+      "Verify HTTP 200 returned",
+      "Check the target email inbox for the newsletter"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F012",
+    "category": "functional",
+    "priority": 12,
+    "description": "Admin can send the newsletter to all active subscribers",
+    "steps": [
+      "Ensure at least one active subscriber and an approved report exist",
+      "Run: curl -X POST http://localhost:8000/api/v1/deliveries/send -H 'Content-Type: application/json' -d '{\"report_id\": 1}'",
+      "Verify HTTP 200 returned",
+      "Run: curl http://localhost:8000/api/v1/jobs/logs?limit=5 and verify send job shows success",
+      "Check subscriber email inbox"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F013",
+    "category": "functional",
+    "priority": 13,
+    "description": "Admin can view 7-day article trend analytics",
+    "steps": [
+      "Run: curl http://localhost:8000/api/v1/analytics/trends/last7",
+      "Verify HTTP 200 returned",
+      "Verify response includes daily breakdown with article counts and categories"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F014",
+    "category": "functional",
+    "priority": 14,
+    "description": "Admin can compare two reports to see what changed between them",
+    "steps": [
+      "Ensure at least 2 reports exist",
+      "Run: curl 'http://localhost:8000/api/v1/analytics/diff?report_id_a=1&report_id_b=2'",
+      "Verify HTTP 200 returned",
+      "Verify response includes added/removed/modified sections"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F015",
+    "category": "frontend",
+    "priority": 15,
+    "description": "Frontend dashboard page loads and displays real-time stats from the backend",
+    "steps": [
+      "Open browser at http://localhost:3000",
+      "Verify the dashboard page loads without errors",
+      "Verify articles_today, total_articles, and other stats are displayed",
+      "Verify the sidebar navigation links are visible and clickable"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F016",
+    "category": "frontend",
+    "priority": 16,
+    "description": "Frontend articles page displays a filterable, paginated list of collected articles",
+    "steps": [
+      "Navigate to http://localhost:3000/articles",
+      "Verify list of articles is displayed with title, source, category, and date",
+      "Apply a filter (e.g., by category) and verify the list updates",
+      "Verify pagination controls work correctly"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F017",
+    "category": "frontend",
+    "priority": 17,
+    "description": "Frontend sources page allows adding and toggling news sources",
+    "steps": [
+      "Navigate to http://localhost:3000/sources",
+      "Verify list of sources is displayed",
+      "Toggle a source on/off and verify the change is reflected",
+      "Add a new source via the form and verify it appears in the list"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F018",
+    "category": "frontend",
+    "priority": 18,
+    "description": "Frontend recipients page allows managing subscribers including CSV import",
+    "steps": [
+      "Navigate to http://localhost:3000/recipients",
+      "Verify subscriber list is displayed",
+      "Add a new subscriber via the form",
+      "Use drag-and-drop to import a CSV file with multiple subscribers",
+      "Verify all imported subscribers appear in the list"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F019",
+    "category": "frontend",
+    "priority": 19,
+    "description": "Frontend reports page shows report list with approval workflow and HTML preview",
+    "steps": [
+      "Navigate to http://localhost:3000/reports",
+      "Verify list of reports is displayed with status badges",
+      "Click on a report to view the HTML content preview",
+      "Approve a report using the Approve button",
+      "Verify status changes to approved"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F020",
+    "category": "frontend",
+    "priority": 20,
+    "description": "Frontend analytics page shows 7-day trend charts",
+    "steps": [
+      "Navigate to http://localhost:3000/analytics",
+      "Verify trend chart is rendered with data for the last 7 days",
+      "Verify category breakdown is shown"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F021",
+    "category": "scheduled",
+    "priority": 21,
+    "description": "Celery Beat scheduler is configured with correct UTC schedule for all 3 daily tasks",
+    "steps": [
+      "Run: docker compose exec backend python -c \"from app.workers.celery_app import celery_app; import json; print(json.dumps({k: str(v) for k,v in celery_app.conf.beat_schedule.items()}, indent=2))\"",
+      "Verify 3 tasks are scheduled: collect (22:00 UTC), report (23:00 UTC), send (00:00 UTC)",
+      "Check Beat logs: docker compose logs beat --tail=20",
+      "Verify Beat log shows 'Scheduler: Sending due task' messages"
+    ],
+    "passes": false
+  },
+  {
+    "id": "F022",
+    "category": "quality",
+    "priority": 22,
+    "description": "Backend test suite passes with >= 80% line coverage",
+    "steps": [
+      "Run: docker compose exec backend pytest tests/ -v --cov=app --cov-report=term-missing",
+      "Verify 0 test failures",
+      "Verify coverage >= 80%"
+    ],
+    "passes": false
+  }
+]

@@ -1,0 +1,50 @@
+# Claude Progress Log
+
+## Goal
+Autonomous operation and incremental improvement of the AI Trend Newsletter Service.
+
+## Status
+Initialized. No features verified yet. All features start with passes=false.
+
+## Environment
+- All services: docker compose up -d
+- Backend rebuild: docker compose up -d --build backend worker beat
+- Backend health: curl http://localhost:8000/health
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000/api/v1/
+- DB shell: docker compose exec postgres psql -U aitracker -d aitracker
+- Redis CLI: docker compose exec redis redis-cli
+- Worker logs: docker compose logs worker -f
+- Beat logs: docker compose logs beat -f
+- Run tests: docker compose exec backend pytest tests/ -v --cov=app --cov-report=term-missing
+- Lint: docker compose exec backend ruff check app/
+- Type check: docker compose exec backend mypy app/
+- Run migrations: docker compose exec backend alembic upgrade head
+- Seed sources: docker compose exec backend python scripts/seed_sources.py
+
+## Feature Summary (22 total)
+- F001: All Docker services healthy + backend /health OK
+- F002: DB migrations run + all 11 tables exist
+- F003: 12 default news sources seeded
+- F004: Dashboard summary endpoint works
+- F005: Sources CRUD (list + add)
+- F006: Manual article collection job works
+- F007: SimHash deduplication marks duplicates
+- F008: Recipient management (add, list, CSV import)
+- F009: Manual GPT-4o report generation
+- F010: Report approval workflow
+- F011: Test email delivery to single address
+- F012: Bulk email send to all subscribers
+- F013: 7-day analytics trends endpoint
+- F014: Report diff comparison endpoint
+- F015: Frontend dashboard page
+- F016: Frontend articles page with filters
+- F017: Frontend sources management page
+- F018: Frontend recipients page with CSV import
+- F019: Frontend reports page with approval workflow
+- F020: Frontend analytics page with charts
+- F021: Celery Beat schedule configured correctly
+- F022: Backend tests pass with >= 80% coverage
+
+## Session log
+[INIT - 2026-03-17] Environment set up. feature_list.json created with 22 features. init.sh and claude-progress.txt written.
