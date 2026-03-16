@@ -4,7 +4,7 @@
 Autonomous operation and incremental improvement of the AI Trend Newsletter Service.
 
 ## Status
-Initialized. No features verified yet. All features start with passes=false.
+COMPLETE — All 22 features pass. 123 tests, 81% coverage, 6 containers Up.
 
 ## Environment
 - All services: docker compose up -d
@@ -63,3 +63,23 @@ Bugs fixed        : Fixed test isolation bug — two test files overriding app.d
 Coverage          : 80% (was 53%)
 Docker status     : Docker Desktop not running (permissions error). F001-F021 pending Docker startup.
 Next priority     : F001 — Start Docker services and verify backend health (requires Docker Desktop to be running)
+
+[SESSION 2 - 2026-03-17]
+Features verified : F001 through F021 — ALL PASS (end-to-end verified)
+Outcome           : All 22 features now passes=true
+Bugs fixed        :
+  1. articles.author column VARCHAR(200) → Text (arXiv long author strings caused StringDataRightTruncationError)
+     Fix: backend/app/models/article.py + new Alembic migration f8aa067a3718
+  2. pytest not installed in Docker container
+     Fix: Changed Dockerfile 'pip install -e .' → 'pip install -e .[dev]'
+  3. aiosqlite missing for SQLite test DB
+     Fix: Added aiosqlite==0.20.0 to pyproject.toml [dev] extras
+  4. Test isolation: SQLite :memory: DB not shared between db fixture and override_get_db
+     Fix: conftest.py — added StaticPool + _current_test_session global to share session
+  5. Analytics test used hardcoded date(2026,3,17) but container clock is UTC (2026-03-16)
+     Fix: Changed to date.today() in test fixture
+Tests             : 123 passed, 0 failures, 81% coverage
+Docker status     : All 6 containers Up (postgres healthy, redis healthy, backend/worker/beat/frontend Up)
+Celery Beat       : 3 tasks scheduled: collect@22:00 UTC, report@23:00 UTC, send@00:00 UTC
+Email delivery    : Tested test-send (1 email) and bulk-send (3 emails) — both success
+Next priority     : NONE — all features complete. Loop termination conditions met.

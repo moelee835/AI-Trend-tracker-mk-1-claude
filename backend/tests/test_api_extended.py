@@ -67,7 +67,7 @@ async def article(db, source):
 @pytest.fixture
 async def report(db):
     r = DailyReport(
-        report_date=date(2026, 3, 17),
+        report_date=date.today(),
         status=ReportStatus.ready,
         included_article_ids=[1, 2, 3],
         keyword_summary={"keywords": ["gpt", "claude", "llm"], "editorial": "Good day"},

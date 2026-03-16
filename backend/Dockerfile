@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml .
 RUN pip install --no-cache-dir --upgrade pip && \
     mkdir -p app && touch app/__init__.py && \
-    pip install --no-cache-dir -e .
+    pip install --no-cache-dir -e .[dev]
 
 COPY . .
 

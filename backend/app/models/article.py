@@ -35,7 +35,7 @@ class Article(Base):
     # Core fields
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     canonical_url: Mapped[str] = mapped_column(String(1000), nullable=False, unique=True)
-    author: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    author: Mapped[str | None] = mapped_column(Text, nullable=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     tags: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
 

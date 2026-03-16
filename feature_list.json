@@ -11,7 +11,7 @@
       "Run: curl http://localhost:8000/health",
       "Verify response contains {\"status\":\"ok\"}"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F002",
@@ -23,7 +23,7 @@
       "Run: docker compose exec postgres psql -U aitracker -d aitracker -c '\\dt'",
       "Verify all 11 tables exist: sources, articles, article_contents, article_fingerprints, article_scores, recipients, daily_reports, report_versions, report_sections, email_deliveries, job_execution_logs"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F003",
@@ -35,7 +35,7 @@
       "Run: curl http://localhost:8000/api/v1/sources/",
       "Verify response contains at least 12 sources"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F004",
@@ -47,7 +47,7 @@
       "Verify response includes fields: articles_today, total_articles, pending_reports, active_recipients, last_collection_at",
       "Verify HTTP 200 response"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F005",
@@ -61,7 +61,7 @@
       "Verify HTTP 201 and the new source is returned with an ID",
       "Run: curl http://localhost:8000/api/v1/sources/ and verify the new source appears"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F006",
@@ -76,7 +76,7 @@
       "Verify job log shows status=success for collect job",
       "Run: curl http://localhost:8000/api/v1/articles/ and verify articles exist"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F007",
@@ -90,7 +90,7 @@
       "Verify duplicate articles are marked with is_duplicate=true",
       "Run unit tests: docker compose exec backend pytest tests/test_analyzers.py -v"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F008",
@@ -104,7 +104,7 @@
       "Create a CSV file with headers email,name and 2 rows, then POST to /api/v1/recipients/import/csv",
       "Verify all subscribers were imported"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F009",
@@ -119,7 +119,7 @@
       "Verify a report exists with status=draft or ready",
       "Run: curl http://localhost:8000/api/v1/reports/<id> and verify html_content is populated"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F010",
@@ -133,7 +133,7 @@
       "Run: curl http://localhost:8000/api/v1/reports/<id>",
       "Verify report status changed to approved"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F011",
@@ -146,7 +146,7 @@
       "Verify HTTP 200 returned",
       "Check the target email inbox for the newsletter"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F012",
@@ -160,7 +160,7 @@
       "Run: curl http://localhost:8000/api/v1/jobs/logs?limit=5 and verify send job shows success",
       "Check subscriber email inbox"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F013",
@@ -172,7 +172,7 @@
       "Verify HTTP 200 returned",
       "Verify response includes daily breakdown with article counts and categories"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F014",
@@ -185,7 +185,7 @@
       "Verify HTTP 200 returned",
       "Verify response includes added/removed/modified sections"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F015",
@@ -198,7 +198,7 @@
       "Verify articles_today, total_articles, and other stats are displayed",
       "Verify the sidebar navigation links are visible and clickable"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F016",
@@ -211,7 +211,7 @@
       "Apply a filter (e.g., by category) and verify the list updates",
       "Verify pagination controls work correctly"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F017",
@@ -224,7 +224,7 @@
       "Toggle a source on/off and verify the change is reflected",
       "Add a new source via the form and verify it appears in the list"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F018",
@@ -238,7 +238,7 @@
       "Use drag-and-drop to import a CSV file with multiple subscribers",
       "Verify all imported subscribers appear in the list"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F019",
@@ -252,7 +252,7 @@
       "Approve a report using the Approve button",
       "Verify status changes to approved"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F020",
@@ -264,7 +264,7 @@
       "Verify trend chart is rendered with data for the last 7 days",
       "Verify category breakdown is shown"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F021",
@@ -277,7 +277,7 @@
       "Check Beat logs: docker compose logs beat --tail=20",
       "Verify Beat log shows 'Scheduler: Sending due task' messages"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "F022",
