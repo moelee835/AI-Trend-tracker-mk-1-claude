@@ -289,6 +289,6 @@
       "Verify 0 test failures",
       "Verify coverage >= 80%"
     ],
-    "passes": false
+    "passes": true
   }
 ]

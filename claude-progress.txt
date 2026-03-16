@@ -48,3 +48,18 @@ Initialized. No features verified yet. All features start with passes=false.
 
 ## Session log
 [INIT - 2026-03-17] Environment set up. feature_list.json created with 22 features. init.sh and claude-progress.txt written.
+
+[SESSION 1 - 2026-03-17]
+Feature worked on : F022 — Backend test suite passes with >= 80% line coverage
+Outcome           : passes=true (123 tests, 80% coverage)
+Tests added       : 101 new tests across 5 new test files:
+                    - tests/conftest.py (shared engine + fixtures)
+                    - tests/test_api_extended.py (43 tests: articles, reports, recipients, analytics, jobs, deliveries, dashboard)
+                    - tests/test_services.py (19 tests: analytics_service, report_service, email_template, deduplicator, scorer)
+                    - tests/test_collectors.py (19 tests: BaseCollector, RssCollector, NewsApiCollector, factory, report_generator)
+                    - tests/test_email_service.py (11 tests: send_report, _send_single with SMTP mocking)
+                    - tests/test_workers.py (9 tests: _run_async, LoggedTask, Celery beat schedule config)
+Bugs fixed        : Fixed test isolation bug — two test files overriding app.dependency_overrides[get_db] with different engines (resolved with conftest.py)
+Coverage          : 80% (was 53%)
+Docker status     : Docker Desktop not running (permissions error). F001-F021 pending Docker startup.
+Next priority     : F001 — Start Docker services and verify backend health (requires Docker Desktop to be running)
